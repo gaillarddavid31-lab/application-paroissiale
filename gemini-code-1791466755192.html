@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Paroissiale</title>
+    <style>
+        :root {
+            --primary: #8B0000;
+            --primary-dark: #5c0000;
+            --gold: #D4AF37;
+            --light-gold: #fdf8e6;
+            --bg: #f9f6f0;
+            --card-bg: #ffffff;
+            --text: #2c2c2c;
+            --text-muted: #666666;
+            --border-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 90px;
+        }
+
+        /* Top Header Sticky */
+        .top-nav {
+            background: linear-gradient(135deg, var(--gold), #b89128);
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .brand-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-badge-indicator {
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.6);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: none;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Hero Carousel */
+        .hero-carousel {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .enhanced-photo {
+            filter: contrast(1.1) brightness(1.05) saturate(1.2);
+        }
+
+        .carousel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85));
+            padding: 24px 20px 14px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .carousel-overlay h1 {
+            font-size: 2.2rem;
+            font-family: Georgia, serif;
+            font-style: italic;
+            font-weight: normal;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .carousel-overlay p {
+            font-size: 1rem;
+            color: #e0e0e0;
+        }
+
+        .carousel-dots {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: #fff;
+            width: 18px;
+            border-radius: 4px;
+        }
+
+        .change-carousel-bar {
+            background: #f0e6c8;
+            border-bottom: 1px solid var(--gold);
+            padding: 12px 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .carousel-upload-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 6px;
+        }
+
+        .church-upload-btn {
+            background: var(--primary);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Message Box / Banner Style */
+        .welcome-banner-container {
+            margin: 20px 20px 0 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+
+        .welcome-banner {
+            background: var(--card-bg);
+            padding: 18px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border: 1px solid rgba(212,175,55,0.4);
+            font-size: 0.98rem;
+            color: var(--primary);
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        /* Admin Action for Message */
+        .admin-msg-box {
+            display: none;
+            margin: 10px 20px 0 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            background: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px dashed var(--primary);
+            text-align: center;
+        }
+
+        .admin-msg-box textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            resize: vertical;
+        }
+
+        /* Cards & Buttons */
+        .main-menu-list {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .menu-btn {
+            background: var(--card-bg);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: var(--border-radius);
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            text-decoration: none;
+            color: var(--text);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            transition: transform 0.15s, box-shadow 0.15s;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        }
+
+        .menu-btn-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: var(--light-gold);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .menu-btn-content {
+            flex-grow: 1;
+        }
+
+        .menu-btn-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .menu-btn-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .menu-btn-arrow {
+            color: #ccc;
+            font-size: 1.4rem;
+        }
+
+        /* App Sections */
+        .app-section {
+            display: none;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .app-section.active {
+            display: block !important;
+        }
+
+        .section-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Calendar Controls & Grid */
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 12px 18px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .calendar-month-btn {
+            background: var(--light-gold);
+            color: var(--primary);
+            border: 1px solid var(--gold);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-month-btn:hover {
+            background: var(--gold);
+            color: #fff;
+        }
+
+        .calendar-select-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .calendar-select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary);
+            background: #fff;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            padding: 6px 0;
+        }
+
+        .calendar-day {
+            min-height: 75px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 6px 2px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer !important;
+            position: relative;
+            background: #fafafa;
+            border: 1px solid #e8e8e8;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .calendar-day:hover {
+            background: #f0f0f0;
+            border-color: var(--gold);
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            border: none;
+            cursor: default !important;
+        }
+
+        .calendar-day.has-event {
+            background: var(--light-gold);
+            border-color: rgba(212,175,55,0.6);
+        }
+
+        .calendar-day.is-feast {
+            background: #fff3e0;
+            border-color: #f57c00;
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--primary);
+            font-weight: bold;
+        }
+
+        .calendar-day.selected {
+            background: var(--primary) !important;
+            color: #ffffff !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        .calendar-day.selected .event-badge, 
+        .calendar-day.selected .feast-badge {
+            background: #ffffff !important;
+            color: var(--primary) !important;
+        }
+
+        .calendar-day-num {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .event-badge {
+            font-size: 0.62rem;
+            background: var(--primary);
+            color: #fff;
+            padding: 2px 3px;
+            border-radius: 4px;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+            font-weight: 600;
+            display: block;
+        }
+
+        .feast-badge {
+            font-size: 0.62rem;
+            background: #e65100;
+            color: #fff;
+            padding: 2px 3px;
+            border-radius: 4px;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+            font-weight: bold;
+            display: block;
+        }
+
+        .feast-info-card {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-left: 5px solid #e65100;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .feast-info-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #e65100;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .feast-info-desc {
+            font-size: 0.92rem;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        /* Admin Forms */
+        .admin-box {
+            background: var(--card-bg);
+            padding: 18px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--gold);
+            display: none;
+        }
+
+        .admin-box h3 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .form-row input, .form-row select, .form-row textarea {
+            flex: 1;
+            min-width: 140px;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: bold;
+            color: var(--primary);
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .action-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            background: #c0392b;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* Lists & Cards */
+        .events-day-list, .contact-list, .culture-list, .annonces-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .event-card, .contact-card, .media-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 5px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .media-card {
+            border-left-color: var(--gold);
+            display: block;
+        }
+
+        .event-time {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .location-tag {
+            display: inline-block;
+            background: #eee;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        /* Annonces */
+        .annonce-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 18px;
+        }
+
+        .annonce-body {
+            padding: 18px;
+        }
+
+        .annonce-tag {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .annonce-title {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .annonce-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Accordion Mass */
+        .mass-step {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            margin-bottom: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .step-header {
+            padding: 16px 20px;
+            font-weight: bold;
+            font-size: 1.05rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            user-select: none;
+        }
+
+        .step-body {
+            padding: 18px 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #444;
+            display: none;
+            background: #fdfdfd;
+        }
+
+        .step-body.open {
+            display: block;
+        }
+
+        .highlight-box {
+            background: var(--light-gold);
+            border-left: 4px solid var(--gold);
+            padding: 14px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+            font-size: 0.9rem;
+        }
+
+        /* Admin Login Bar */
+        .admin-login-bar {
+            text-align: center;
+            padding: 20px 10px;
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .admin-login-btn {
+            background: transparent;
+            border: none;
+            color: #999;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Bottom Fixed Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #e0e0e0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.7rem;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <div class="top-nav">
+        <a href="#sec-accueil" class="brand-title" onclick="openSection('sec-accueil')">
+            ✝ Application Paroissiale
+        </a>
+        <div id="admin-indicator" class="admin-badge-indicator">🔑 Mode Admin Actif</div>
+    </div>
+
+    <!-- 1. ACCUEIL -->
+    <div id="sec-accueil" class="app-section active">
+
+        <div class="hero-carousel">
+            <div class="carousel-dots">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+
+            <div class="carousel-slide active" id="slide-0">
+                <img id="img-church-0" src="https://lh3.googleusercontent.com/gps-proxy/ALl-18H-79Ym8J0Xm0dO1oT0k3b5X7-a-92p019a2884=w600" alt="Églises Beauzelle">
+                <div class="carousel-overlay">
+                    <h1>Bienvenue !</h1>
+                    <p>Église Saint-Julien — Beauzelle</p>
+                </div>
+            </div>
+
+            <div class="carousel-slide" id="slide-1">
+                <img id="img-church-1" src="https://lh3.googleusercontent.com/gps-proxy/ALl-18G_0_zM03k0_a8123984_a1928_a928=w600" class="enhanced-photo" alt="Églises Cornebarrieu">
+                <div class="carousel-overlay">
+                    <h1>Bienvenue !</h1>
+                    <p>Église Saint-Clément — Cornebarrieu</p>
+                </div>
+            </div>
+
+            <div class="carousel-slide" id="slide-2">
+                <img id="img-church-2" src="https://lh3.googleusercontent.com/gps-proxy/ALl-18H_9281390_a2918390218301928301_a=w600" alt="Églises Seilh">
+                <div class="carousel-overlay">
+                    <h1>Bienvenue !</h1>
+                    <p>Église Sainte-Blandine — Seilh</p>
+                </div>
+            </div>
+
+            <div class="carousel-slide" id="slide-3">
+                <img id="img-church-3" src="https://lh3.googleusercontent.com/gps-proxy/ALl-18F_a29183012983019283012983012983_a=w600" alt="Églises Aussonne">
+                <div class="carousel-overlay">
+                    <h1>Bienvenue !</h1>
+                    <p>Église Notre-Dame-du-Rosaire — Aussonne</p>
+                </div>
+            </div>
+
+            <div class="carousel-slide" id="slide-4">
+                <img id="img-church-4" src="https://lh3.googleusercontent.com/gps-proxy/ALl-18E_9182390128301928301298301298301_a=w600" alt="Églises Mondonville">
+                <div class="carousel-overlay">
+                    <h1>Bienvenue !</h1>
+                    <p>Église Saint-Pierre-aux-Liens — Mondonville</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="change-carousel-bar admin-only">
+            <span style="font-size:0.82rem; font-weight:bold; color:#5c0000;">🖼️ Remplacer la photo d'une église :</span>
+            <div class="carousel-upload-grid">
+                <label for="input-beauzelle" class="church-upload-btn">Beauzelle</label>
+                <input type="file" id="input-beauzelle" accept="image/*" onchange="updateChurchPhoto(0, event)">
+
+                <label for="input-cornebarrieu" class="church-upload-btn">Cornebarrieu</label>
+                <input type="file" id="input-cornebarrieu" accept="image/*" onchange="updateChurchPhoto(1, event)">
+
+                <label for="input-seilh" class="church-upload-btn">Seilh</label>
+                <input type="file" id="input-seilh" accept="image/*" onchange="updateChurchPhoto(2, event)">
+
+                <label for="input-aussonne" class="church-upload-btn">Aussonne</label>
+                <input type="file" id="input-aussonne" accept="image/*" onchange="updateChurchPhoto(3, event)">
+
+                <label for="input-mondonville" class="church-upload-btn">Mondonville</label>
+                <input type="file" id="input-mondonville" accept="image/*" onchange="updateChurchPhoto(4, event)">
+            </div>
+        </div>
+
+        <!-- Encadré du message d'accueil public (propre et fixe) -->
+        <div class="welcome-banner-container">
+            <div id="welcome-display-box" class="welcome-banner">En Christ, nous voulons être une communauté fraternelle, joyeuse et accueillante, pour des vies nouvelles !</div>
+        </div>
+
+        <!-- Encadré de modification réservé au Mode Admin -->
+        <div class="admin-msg-box admin-only">
+            <p style="font-size:0.85rem; font-weight:bold; color:var(--primary); margin-bottom:6px;">✏️ Modifier le message d'accueil :</p>
+            <textarea id="admin-welcome-input" rows="3" placeholder="Tapez votre message ici..."></textarea>
+            <button class="action-btn" onclick="saveAdminWelcomeMessage()">Enregistrer le message</button>
+        </div>
+
+        <div class="main-menu-list">
+            <a href="https://www.aelf.org" target="_blank" class="menu-btn">
+                <div class="menu-btn-icon">📖</div>
+                <div class="menu-btn-content">
+                    <div class="menu-btn-title">1. Lectures du jour</div>
+                    <div class="menu-btn-desc">Accès direct aux textes de la messe (AELF)</div>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </a>
+
+            <a href="#sec-calendrier" class="menu-btn" onclick="openSection('sec-calendrier'); return false;">
+                <div class="menu-btn-icon">📅</div>
+                <div class="menu-btn-content">
+                    <div class="menu-btn-title">2. Calendrier</div>
+                    <div class="menu-btn-desc">Vue d'ensemble du mois & horaires de messes</div>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </a>
+
+            <a href="#sec-annonces" class="menu-btn" onclick="openSection('sec-annonces'); return false;">
+                <div class="menu-btn-icon">📢</div>
+                <div class="menu-btn-content">
+                    <div class="menu-btn-title">3. Annonces & Événements</div>
+                    <div class="menu-btn-desc">Louange, rencontres & vie paroissiale</div>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </a>
+
+            <a href="#sec-messe" class="menu-btn" onclick="openSection('sec-messe'); return false;">
+                <div class="menu-btn-icon">⛪</div>
+                <div class="menu-btn-content">
+                    <div class="menu-btn-title">4. Explication sur le suivi d'une messe</div>
+                    <div class="menu-btn-desc">Déroulé étape par étape & sens des gestes</div>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </a>
+
+            <a href="#sec-culture" class="menu-btn" onclick="openSection('sec-culture'); return false;">
+                <div class="menu-btn-icon">📚</div>
+                <div class="menu-btn-content">
+                    <div class="menu-btn-title">Culture & Incontournables</div>
+                    <div class="menu-btn-desc">Livres, films & séries à ne pas manquer</div>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </a>
+
+            <a href="#sec-contact" class="menu-btn" onclick="openSection('sec-contact'); return false;">
+                <div class="menu-btn-icon">📞</div>
+                <div class="menu-btn-content">
+                    <div class="menu-btn-title">Contact</div>
+                    <div class="menu-btn-desc">Annuaire des personnes à contacter</div>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </a>
+        </div>
+
+        <div class="admin-login-bar">
+            <button class="admin-login-btn" onclick="toggleAdminAuth()" id="admin-auth-btn">🔒 Accès Organisateur / Admin</button>
+            <button class="admin-login-btn admin-only" onclick="changeAdminPinCode()" style="color:var(--primary); font-weight:bold;">🔑 Modifier mon code secret Admin</button>
+        </div>
+
+    </div>
+
+    <!-- 2. CALENDRIER -->
+    <div id="sec-calendrier" class="app-section">
+        <div class="section-header">
+            <div class="section-title">Calendrier Paroissial</div>
+        </div>
+
+        <div class="admin-box admin-only">
+            <h3 id="form-calendar-title">➕ Saisir un événement au calendrier</h3>
+            <div class="form-row">
+                <input type="number" id="ev-day" min="1" max="31" placeholder="Jour (ex: 15)">
+                <input type="time" id="ev-time" value="11:00">
+                <select id="ev-type">
+                    <option value="Messe Dominicale">Messe Dominicale</option>
+                    <option value="Messe en semaine">Messe en semaine</option>
+                    <option value="Messe & Repas partagé">Messe & Repas partagé</option>
+                    <option value="Soirée de Louange & Prière">Soirée de Louange & Prière</option>
+                    <option value="Catéchisme / Aumônerie">Catéchisme / Aumônerie</option>
+                    <option value="Préparation Sacrements">Préparation Sacrements</option>
+                    <option value="Autre événement">Autre événement libre</option>
+                </select>
+                <select id="ev-location">
+                    <option value="Aussonne">Aussonne</option>
+                    <option value="Beauzelle">Beauzelle</option>
+                    <option value="Cornebarrieu">Cornebarrieu</option>
+                    <option value="Mondonville">Mondonville</option>
+                    <option value="Seilh">Seilh</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="text" id="ev-custom" placeholder="Précision / Détails libres (ex: Apporter un plat à partager)">
+                <select id="ev-recurrence">
+                    <option value="unique">Date unique</option>
+                    <option value="1_semaine">Pour 1 semaine</option>
+                    <option value="2_semaines">Pour 2 semaines</option>
+                    <option value="3_semaines">Pour 3 semaines</option>
+                    <option value="4_semaines">Pour tout le mois (4 semaines)</option>
+                </select>
+            </div>
+            <div class="form-row" style="align-items:center; justify-content:space-between;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="ev-publish-annonce">
+                    📢 Publier aussi automatiquement dans les Annonces
+                </label>
+                <button class="action-btn" onclick="addCalendarEvent()">Enregistrer l'événement</button>
+            </div>
+        </div>
+
+        <div class="calendar-controls">
+            <button class="calendar-month-btn" onclick="changeMonth(-1)">◄ Mois précédent</button>
+            <div class="calendar-select-group">
+                <select id="select-month" class="calendar-select" onchange="onSelectMonthYearChange()">
+                    <option value="0">Janvier</option>
+                    <option value="1">Février</option>
+                    <option value="2">Mars</option>
+                    <option value="3">Avril</option>
+                    <option value="4">Mai</option>
+                    <option value="5">Juin</option>
+                    <option value="6">Juillet</option>
+                    <option value="7">Août</option>
+                    <option value="8">Septembre</option>
+                    <option value="9">Octobre</option>
+                    <option value="10">Novembre</option>
+                    <option value="11">Décembre</option>
+                </select>
+                <select id="select-year" class="calendar-select" onchange="onSelectMonthYearChange()">
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                </select>
+            </div>
+            <button class="calendar-month-btn" onclick="changeMonth(1)">Mois suivant ►</button>
+        </div>
+
+        <div class="calendar-grid" id="calendar-grid-box"></div>
+        <div id="feast-info-container"></div>
+
+        <div style="font-weight:bold; margin-bottom:12px; color:var(--primary);" id="selected-date-title">
+            Détail de la journée sélectionnée :
+        </div>
+
+        <div class="events-day-list" id="events-container"></div>
+    </div>
+
+    <!-- 3. ANNONCES -->
+    <div id="sec-annonces" class="app-section">
+        <div class="section-header">
+            <div class="section-title">Annonces & Événements</div>
+        </div>
+
+        <div class="admin-box admin-only">
+            <h3>➕ Rédiger une nouvelle annonce</h3>
+            <div class="form-row">
+                <input type="text" id="ann-title" placeholder="Titre de l'annonce (ex: Café de rentrée)">
+                <select id="ann-tag">
+                    <option value="Temps fort">Temps fort</option>
+                    <option value="Accueil">Accueil</option>
+                    <option value="Sacrements">Sacrements</option>
+                    <option value="Information">Information</option>
+                </select>
+                <input type="text" id="ann-date" placeholder="Date/Heure (ex: Dimanche 11 Octobre à 12h)">
+                <select id="ann-location">
+                    <option value="Aussonne">Aussonne</option>
+                    <option value="Beauzelle">Beauzelle</option>
+                    <option value="Cornebarrieu">Cornebarrieu</option>
+                    <option value="Mondonville">Mondonville</option>
+                    <option value="Seilh">Seilh</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <textarea id="ann-desc" rows="2" placeholder="Texte explicatif complet de l'annonce..."></textarea>
+                <button class="action-btn" onclick="addAnnonceItem()">Publier l'annonce</button>
+            </div>
+        </div>
+
+        <div class="annonces-list" id="annonces-list-container"></div>
+    </div>
+
+    <!-- 4. EXPLICATION SUIVI MESSE -->
+    <div id="sec-messe" class="app-section">
+        <div class="section-header">
+            <div class="section-title">Explication sur le suivi d'une messe</div>
+        </div>
+
+        <div class="mass-step">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span>1. Rites d'Accueil</span>
+                <span>▼</span>
+            </div>
+            <div class="step-body">
+                <p><b>Rassemblement & Chant d'entrée :</b> L'assemblée s'unit par le chant pour ouvrir la célébration.</p>
+                <br>
+                <p><b>Signe de croix :</b> Le prêtre et les fidèles se marquent de la croix pour se placer en présence du Père, du Fils et du Saint-Esprit.</p>
+            </div>
+        </div>
+
+        <div class="mass-step">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span>2. Liturgie de la Parole</span>
+                <span>▼</span>
+            </div>
+            <div class="step-body">
+                <p><b>Lectures & Psaume :</b> Écoute des textes sacrés de la Bible.</p>
+                <br>
+                <p><b>Évangile & Homélie :</b> Écoute de la parole de Jésus puis commentaire du prêtre pour éclairer notre vie quotidienne.</p>
+            </div>
+        </div>
+
+        <div class="mass-step">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span>3. Liturgie de l'Eucharistie</span>
+                <span>▼</span>
+            </div>
+            <div class="step-body">
+                <p><b>Offertoire :</b> Présentation du pain et du vin.</p>
+
+                <div class="highlight-box">
+                    <b>💡 Pourquoi ce moment de recueillement / génuflexion ?</b><br>
+                    Pendant la Prière Eucharistique (avant le Notre Père), le pain et le vin sont consacrés. C'est un temps d'humilité et d'adoration profonde face au mystère de la présence du Christ.
+                </div>
+
+                <p><b>Notre Père & La Communion :</b> La prière partagée des enfants de Dieu puis le partage du Pain de vie.</p>
+            </div>
+        </div>
+
+        <div class="mass-step">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span>4. Rites de Conclusion</span>
+                <span>▼</span>
+            </div>
+            <div class="step-body">
+                <p><b>Bénédiction & Envoi :</b> Le prêtre bénit l'assemblée qui est invitée à porter la paix et l'amour du Christ dans sa vie de tous les jours.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. CULTURE & INCONTOURNABLES -->
+    <div id="sec-culture" class="app-section">
+        <div class="section-header">
+            <div class="section-title">Culture & Incontournables</div>
+            <div class="section-subtitle">Livres, films & séries recommandés</div>
+        </div>
+
+        <div class="admin-box admin-only">
+            <h3>➕ Ajouter une recommandation culturelle</h3>
+            <div class="form-row">
+                <select id="cul-type">
+                    <option value="🎬 Série">Série</option>
+                    <option value="🎥 Film">Film</option>
+                    <option value="📚 Livre">Livre</option>
+                    <option value="🎧 Podcast">Podcast</option>
+                </select>
+                <input type="text" id="cul-title" placeholder="Titre (ex: The Chosen)">
+            </div>
+            <div class="form-row">
+                <input type="text" id="cul-desc" placeholder="Courte description / avis">
+                <button class="action-btn" onclick="addCultureItem()">Ajouter</button>
+            </div>
+        </div>
+
+        <div class="culture-list" id="culture-list-container"></div>
+    </div>
+
+    <!-- 6. CONTACT -->
+    <div id="sec-contact" class="app-section">
+        <div class="section-header">
+            <div class="section-title">Personnes à contacter</div>
+            <div class="section-subtitle">Annuaire des responsables & interlocuteurs de la paroisse</div>
+        </div>
+
+        <div class="admin-box admin-only">
+            <h3>➕ Ajouter une personne à contacter</h3>
+            <div class="form-row">
+                <input type="text" id="cnt-name" placeholder="Nom Prénom (ex: Père Joseph)">
+                <input type="text" id="cnt-role" placeholder="Rôle (ex: Curé, Secrétariat, Baptêmes)">
+            </div>
+            <div class="form-row">
+                <input type="tel" id="cnt-phone" placeholder="Téléphone">
+                <input type="email" id="cnt-email" placeholder="Adresse e-mail">
+                <button class="action-btn" onclick="addContactPerson()">Ajouter</button>
+            </div>
+        </div>
+
+        <div class="contact-list" id="contact-list-container"></div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#sec-accueil" class="nav-item active" onclick="openSection('sec-accueil', this); return false;">
+            <span class="nav-icon">🏠</span>
+            <span>Accueil</span>
+        </a>
+        <a href="#sec-messe" class="nav-item" onclick="openSection('sec-messe', this); return false;">
+            <span class="nav-icon">⛪</span>
+            <span>La Messe</span>
+        </a>
+        <a href="#sec-calendrier" class="nav-item" onclick="openSection('sec-calendrier', this); return false;">
+            <span class="nav-icon">📅</span>
+            <span>Calendrier</span>
+        </a>
+        <a href="#sec-annonces" class="nav-item" onclick="openSection('sec-annonces', this); return false;">
+            <span class="nav-icon">📢</span>
+            <span>Annonces</span>
+        </a>
+        <a href="#sec-culture" class="nav-item" onclick="openSection('sec-culture', this); return false;">
+            <span class="nav-icon">📚</span>
+            <span>Culture</span>
+        </a>
+        <a href="#sec-contact" class="nav-item" onclick="openSection('sec-contact', this); return false;">
+            <span class="nav-icon">📞</span>
+            <span>Contact</span>
+        </a>
+    </div>
+
+</div>
+
+<script>
+    const christianFeasts = {
+        "2026-01-01": { name: "Sainte Marie, Mère de Dieu", desc: "Célébration de la Maternité divine de la Vierge Marie." },
+        "2026-01-04": { name: "Épiphanie", desc: "Manifestation de Jésus aux Rois Mages guidés par l'étoile." },
+        "2026-02-02": { name: "Présentation du Seigneur (Chandeleur)", desc: "Jésus présenté au Temple." },
+        "2026-02-18": { name: "Mercredi des Cendres", desc: "Début du Carême." },
+        "2026-03-25": { name: "Annonciation", desc: "L'ange Gabriel annonce à Marie qu'elle enfantera le Fils de Dieu." },
+        "2026-03-29": { name: "Dimanche des Rameaux", desc: "Entrée triomphale de Jésus à Jérusalem." },
+        "2026-04-02": { name: "Jeudi Saint", desc: "Mémorial de la Cène." },
+        "2026-04-03": { name: "Vendredi Saint", desc: "Passion et Mort de Jésus sur la Croix." },
+        "2026-04-05": { name: "Pâques", desc: "Résurrection du Christ !" },
+        "2026-05-14": { name: "Ascension", desc: "Élévation de Jésus au Ciel." },
+        "2026-05-24": { name: "Pentecôte", desc: "Descente du Saint-Esprit sur les Apôtres." },
+        "2026-05-31": { name: "Sainte Trinité", desc: "Célébration d'un Dieu en trois Personnes." },
+        "2026-06-07": { name: "Fête-Dieu (Sacrement)", desc: "Présence réelle du Christ." },
+        "2026-08-15": { name: "Assomption", desc: "Élévation de la Vierge Marie au Ciel." },
+        "2026-11-01": { name: "Toussaint", desc: "Célébration de tous les saints." },
+        "2026-11-02": { name: "Commémoration des Défunts", desc: "Prière pour les défunts." },
+        "2026-11-29": { name: "1er Dimanche de l'Avent", desc: "Début de l'Avent." },
+        "2026-12-08": { name: "Immaculée Conception", desc: "Marie préservée du péché." },
+        "2026-12-25": { name: "Noël", desc: "Naissance de Jésus-Christ." },
+
+        "2027-01-01": { name: "Sainte Marie, Mère de Dieu", desc: "Célébration de la Maternité divine." },
+        "2027-01-03": { name: "Épiphanie", desc: "Manifestation de Jésus aux Rois Mages." },
+        "2027-02-10": { name: "Mercredi des Cendres", desc: "Début du Carême." },
+        "2027-03-21": { name: "Dimanche des Rameaux", desc: "Entrée de Jésus à Jérusalem." },
+        "2027-03-26": { name: "Vendredi Saint", desc: "Passion et Crucifixion du Seigneur." },
+        "2027-03-28": { name: "Pâques", desc: "Résurrection glorieuse du Christ." },
+        "2027-05-06": { name: "Ascension", desc: "Élévation de Jésus au Ciel." },
+        "2027-05-16": { name: "Pentecôte", desc: "Don du Saint-Esprit." },
+        "2027-08-15": { name: "Assomption", desc: "Élévation de la Vierge Marie au Ciel." },
+        "2027-11-01": { name: "Toussaint", desc: "Fête de tous les Saints." },
+        "2027-12-25": { name: "Noël", desc: "Naissance du Sauveur." }
+    };
+
+    let appData = {
+        pinCode: "1234",
+        calendarEvents: {},
+        annonces: [],
+        welcomeMessage: "En Christ, nous voulons être une communauté fraternelle, joyeuse et accueillante, pour des vies nouvelles !",
+        culture: [
+            { type: "🎬 Série", title: "The Chosen", desc: "Série captivante sur la vie de Jésus." }
+        ],
+        contacts: [
+            { name: "Presbytère & Secrétariat", role: "Accueil général", phone: "05 61 00 00 00", email: "secretariat@paroisse.fr" }
+        ],
+        churchPhotos: [
+            "https://lh3.googleusercontent.com/gps-proxy/ALl-18H-79Ym8J0Xm0dO1oT0k3b5X7-a-92p019a2884=w600",
+            "https://lh3.googleusercontent.com/gps-proxy/ALl-18G_0_zM03k0_a8123984_a1928_a928=w600",
+            "https://lh3.googleusercontent.com/gps-proxy/ALl-18H_9281390_a2918390218301928301_a=w600",
+            "https://lh3.googleusercontent.com/gps-proxy/ALl-18F_a29183012983019283012983012983_a=w600",
+            "https://lh3.googleusercontent.com/gps-proxy/ALl-18E_9182390128301928301298301298301_a=w600"
+        ]
+    };
+
+    function loadSavedData() {
+        try {
+            const saved = localStorage.getItem("paroisse_app_db");
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                appData = { ...appData, ...parsed };
+            }
+        } catch(e) {
+            console.error("Storage error:", e);
+        }
+    }
+
+    function saveData() {
+        try {
+            localStorage.setItem("paroisse_app_db", JSON.stringify(appData));
+        } catch(e) {
+            console.error("Save error:", e);
+        }
+    }
+
+    function saveAdminWelcomeMessage() {
+        const input = document.getElementById('admin-welcome-input');
+        if (input) {
+            const val = input.value.trim();
+            if (val) {
+                appData.welcomeMessage = val;
+                saveData();
+                renderWelcomeMessage();
+                alert("✅ Message d'accueil mis à jour avec succès !");
+            } else {
+                alert("Le message ne peut pas être vide.");
+            }
+        }
+    }
+
+    function renderWelcomeMessage() {
+        const displayBox = document.getElementById('welcome-display-box');
+        const inputField = document.getElementById('admin-welcome-input');
+        if (displayBox && appData.welcomeMessage) {
+            displayBox.innerText = appData.welcomeMessage;
+        }
+        if (inputField && appData.welcomeMessage) {
+            inputField.value = appData.welcomeMessage;
+        }
+    }
+
+    let isAdmin = false;
+
+    function toggleAdminAuth() {
+        if (!isAdmin) {
+            const pwd = prompt("Entrez le mot de passe Organisateur / Admin :");
+            if (pwd === appData.pinCode) {
+                isAdmin = true;
+                applyAdminMode();
+                alert("🔓 Mode Admin déverrouillé !");
+            } else if (pwd !== null) {
+                alert("Mot de passe incorrect.");
+            }
+        } else {
+            isAdmin = false;
+            applyAdminMode();
+            alert("Vous avez quitté le mode Admin.");
+        }
+    }
+
+    function changeAdminPinCode() {
+        const oldPin = prompt("Entrez votre code secret actuel :");
+        if (oldPin === appData.pinCode) {
+            const newPin = prompt("Entrez votre NOUVEAU code secret :");
+            if (newPin && newPin.trim().length > 0) {
+                appData.pinCode = newPin.trim();
+                saveData();
+                alert("✅ Code secret mis à jour !");
+            }
+        } else if (oldPin !== null) {
+            alert("Code actuel incorrect.");
+        }
+    }
+
+    function applyAdminMode() {
+        const adminElements = document.querySelectorAll('.admin-only, .admin-box');
+        const adminBtn = document.getElementById('admin-auth-btn');
+        const adminIndicator = document.getElementById('admin-indicator');
+
+        adminElements.forEach(el => {
+            if (isAdmin) {
+                if (el.classList.contains('delete-btn')) el.style.display = 'inline-block';
+                else el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        if (isAdmin) {
+            if (adminBtn) adminBtn.innerText = "🔓 Quitter le mode Admin";
+            if (adminIndicator) adminIndicator.style.display = "block";
+        } else {
+            if (adminBtn) adminBtn.innerText = "🔒 Accès Organisateur / Admin";
+            if (adminIndicator) adminIndicator.style.display = "none";
+        }
+    }
+
+    function openSection(sectionId, navEl) {
+        document.querySelectorAll('.app-section').forEach(sec => {
+            sec.style.display = 'none';
+            sec.classList.remove('active');
+        });
+
+        const target = document.getElementById(sectionId);
+        if (target) {
+            target.style.display = 'block';
+            target.classList.add('active');
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+        if (navEl) {
+            navEl.classList.add('active');
+        } else {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (sectionId === 'sec-accueil' && navItems[0]) navItems[0].classList.add('active');
+            if (sectionId === 'sec-messe' && navItems[1]) navItems[1].classList.add('active');
+            if (sectionId === 'sec-calendrier' && navItems[2]) navItems[2].classList.add('active');
+            if (sectionId === 'sec-annonces' && navItems[3]) navItems[3].classList.add('active');
+            if (sectionId === 'sec-culture' && navItems[4]) navItems[4].classList.add('active');
+            if (sectionId === 'sec-contact' && navItems[5]) navItems[5].classList.add('active');
+        }
+
+        window.scrollTo(0, 0);
+    }
+
+    let currentSlide = 0;
+    function nextSlide() {
+        const dots = document.querySelectorAll('.dot');
+        const activeSlide = document.getElementById(`slide-${currentSlide}`);
+        if (activeSlide) activeSlide.classList.remove('active');
+        if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+
+        currentSlide = (currentSlide + 1) % 5;
+
+        const nextActiveSlide = document.getElementById(`slide-${currentSlide}`);
+        if (nextActiveSlide) nextActiveSlide.classList.add('active');
+        if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+    }
+    setInterval(nextSlide, 3500);
+
+    function updateChurchPhoto(slideIndex, event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            appData.churchPhotos[slideIndex] = e.target.result;
+            const img = document.getElementById(`img-church-${slideIndex}`);
+            if (img) img.src = e.target.result;
+            saveData();
+            alert("Photo mise à jour !");
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function renderChurchPhotos() {
+        appData.churchPhotos.forEach((src, idx) => {
+            const img = document.getElementById(`img-church-${idx}`);
+            if (img && src) img.src = src;
+        });
+    }
+
+    let currentCalMonth = 9;
+    let currentCalYear = 2026;
+    let selectedDayNum = 8;
+
+    function renderCalendarGrid() {
+        const gridBox = document.getElementById('calendar-grid-box');
+        if (!gridBox) return;
+
+        gridBox.innerHTML = `
+            <div class="calendar-day-header">L</div>
+            <div class="calendar-day-header">M</div>
+            <div class="calendar-day-header">M</div>
+            <div class="calendar-day-header">J</div>
+            <div class="calendar-day-header">V</div>
+            <div class="calendar-day-header">S</div>
+            <div class="calendar-day-header">D</div>
+        `;
+
+        const firstDayDate = new Date(currentCalYear, currentCalMonth, 1);
+        let startDay = firstDayDate.getDay();
+        startDay = (startDay === 0) ? 6 : startDay - 1;
+
+        const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+
+        for (let i = 0; i < startDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'calendar-day empty';
+            gridBox.appendChild(emptyCell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = formatDateKey(currentCalYear, currentCalMonth + 1, day);
+            const dayCell = document.createElement('div');
+            dayCell.className = 'calendar-day';
+            dayCell.id = `cell-${dateStr}`;
+
+            if (day === selectedDayNum) dayCell.classList.add('selected');
+
+            const today = new Date();
+            if (today.getFullYear() === currentCalYear && today.getMonth() === currentCalMonth && today.getDate() === day) {
+                dayCell.classList.add('today');
+            }
+
+            dayCell.onclick = function() { clickCalendarDay(day); };
+
+            let cellContent = `<span class="calendar-day-num">${day}</span>`;
+
+            const feast = christianFeasts[dateStr];
+            if (feast) {
+                dayCell.classList.add('is-feast');
+                cellContent += `<span class="feast-badge">✝ ${feast.name}</span>`;
+            }
+
+            const evs = appData.calendarEvents[dateStr];
+            if (evs && evs.length > 0) {
+                dayCell.classList.add('has-event');
+                cellContent += `<span class="event-badge">${evs[0].time} ${evs[0].type.substring(0,6)}..</span>`;
+            }
+
+            dayCell.innerHTML = cellContent;
+            gridBox.appendChild(dayCell);
+        }
+
+        document.getElementById('select-month').value = currentCalMonth;
+        document.getElementById('select-year').value = currentCalYear;
+
+        renderSelectedDayDetails();
+    }
+
+    function formatDateKey(year, month, day) {
+        const m = month < 10 ? '0' + month : month;
+        const d = day < 10 ? '0' + day : day;
+        return `${year}-${m}-${d}`;
+    }
+
+    function changeMonth(delta) {
+        currentCalMonth += delta;
+        if (currentCalMonth > 11) {
+            currentCalMonth = 0;
+            currentCalYear++;
+        } else if (currentCalMonth < 0) {
+            currentCalMonth = 11;
+            currentCalYear--;
+        }
+        selectedDayNum = 1;
+        renderCalendarGrid();
+    }
+
+    function onSelectMonthYearChange() {
+        currentCalMonth = parseInt(document.getElementById('select-month').value);
+        currentCalYear = parseInt(document.getElementById('select-year').value);
+        selectedDayNum = 1;
+        renderCalendarGrid();
+    }
+
+    function clickCalendarDay(day) {
+        selectedDayNum = day;
+        renderCalendarGrid();
+    }
+
+    function renderSelectedDayDetails() {
+        const dateStr = formatDateKey(currentCalYear, currentCalMonth + 1, selectedDayNum);
+        const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+
+        document.getElementById('ev-day').value = selectedDayNum;
+        document.getElementById('selected-date-title').innerText = `Détail du ${selectedDayNum} ${monthNames[currentCalMonth]} ${currentCalYear} :`;
+
+        const feastContainer = document.getElementById('feast-info-container');
+        const feast = christianFeasts[dateStr];
+        if (feast) {
+            feastContainer.innerHTML = `
+                <div class="feast-info-card">
+                    <div class="feast-info-title">✝ ${feast.name}</div>
+                    <div class="feast-info-desc">${feast.desc}</div>
+                </div>
+            `;
+        } else {
+            feastContainer.innerHTML = '';
+        }
+
+        const container = document.getElementById('events-container');
+        container.innerHTML = '';
+
+        const evs = appData.calendarEvents[dateStr];
+        if (evs && evs.length > 0) {
+            evs.forEach((ev, idx) => {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="event-time">${ev.time}</div>
+                        <h4>${ev.type}</h4>
+                        <p>${ev.custom ? ev.custom : 'Événement'}</p>
+                        <span class="location-tag">Édifice : ${ev.location}</span>
+                    </div>
+                    <button class="delete-btn admin-only" onclick="deleteCalendarEvent('${dateStr}', ${idx})">🗑️ Supprimer</button>
+                `;
+                container.appendChild(card);
+            });
+        } else {
+            container.innerHTML = `<p style="font-size:0.9rem; color:#888;">Aucun événement enregistré.</p>`;
+        }
+
+        applyAdminMode();
+    }
+
+    function addCalendarEvent() {
+        const dayInput = parseInt(document.getElementById('ev-day').value);
+        const time = document.getElementById('ev-time').value;
+        const type = document.getElementById('ev-type').value;
+        const location = document.getElementById('ev-location').value;
+        const custom = document.getElementById('ev-custom').value.trim();
+        const recurrence = document.getElementById('ev-recurrence').value;
+        const publishAnnonce = document.getElementById('ev-publish-annonce').checked;
+
+        if (!dayInput || dayInput < 1 || dayInput > 31) {
+            alert("Veuillez saisir un numéro de jour valide.");
+            return;
+        }
+
+        let daysToProcess = [dayInput];
+        const daysInCurrentMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+
+        if (recurrence === '1_semaine') {
+            if (dayInput + 7 <= daysInCurrentMonth) daysToProcess.push(dayInput + 7);
+        } else if (recurrence === '2_semaines') {
+            if (dayInput + 7 <= daysInCurrentMonth) daysToProcess.push(dayInput + 7);
+            if (dayInput + 14 <= daysInCurrentMonth) daysToProcess.push(dayInput + 14);
+        } else if (recurrence === '3_semaines') {
+            if (dayInput + 7 <= daysInCurrentMonth) daysToProcess.push(dayInput + 7);
+            if (dayInput + 14 <= daysInCurrentMonth) daysToProcess.push(dayInput + 14);
+            if (dayInput + 21 <= daysInCurrentMonth) daysToProcess.push(dayInput + 21);
+        } else if (recurrence === '4_semaines') {
+            for (let d = dayInput; d <= daysInCurrentMonth; d += 7) {
+                if (!daysToProcess.includes(d)) daysToProcess.push(d);
+            }
+        }
+
+        daysToProcess.forEach(d => {
+            const key = formatDateKey(currentCalYear, currentCalMonth + 1, d);
+            if (!appData.calendarEvents[key]) appData.calendarEvents[key] = [];
+
+            appData.calendarEvents[key].push({
+                time: time.replace(':', 'h'),
+                type: type,
+                location: location,
+                custom: custom
+            });
+        });
+
+        if (publishAnnonce) {
+            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            appData.annonces.unshift({
+                title: type,
+                tag: "Événement Calendrier",
+                date: `le ${dayInput} ${monthNames[currentCalMonth]} à ${time.replace(':', 'h')}`,
+                location: location,
+                desc: custom ? custom : "Événement"
+            });
+            renderAnnonces();
+        }
+
+        saveData();
+        renderCalendarGrid();
+        alert(`Enregistré pour le ${dayInput} !`);
+    }
+
+    function deleteCalendarEvent(dateStr, idx) {
+        if (!appData.calendarEvents[dateStr]) return;
+        appData.calendarEvents[dateStr].splice(idx, 1);
+        if (appData.calendarEvents[dateStr].length === 0) {
+            delete appData.calendarEvents[dateStr];
+        }
+        saveData();
+        renderCalendarGrid();
+        alert("Supprimé !");
+    }
+
+    function renderAnnonces() {
+        const container = document.getElementById('annonces-list-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (appData.annonces.length === 0) {
+            container.innerHTML = `<p style="font-size:0.9rem; color:#888;">Aucune annonce.</p>`;
+            return;
+        }
+
+        appData.annonces.forEach((ann, idx) => {
+            const card = document.createElement('div');
+            card.className = 'annonce-card';
+            card.innerHTML = `
+                <div class="annonce-body">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="annonce-tag">${ann.tag || 'Information'}</div>
+                        <button class="delete-btn admin-only" onclick="deleteAnnonce(${idx})">🗑️ Supprimer</button>
+                    </div>
+                    <div class="annonce-title">${ann.title}</div>
+                    <div class="annonce-text">
+                        ${ann.desc ? ann.desc + '<br><br>' : ''}
+                        <b>📅 ${ann.date}</b> — Lieu : ${ann.location}
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        applyAdminMode();
+    }
+
+    function addAnnonceItem() {
+        const title = document.getElementById('ann-title').value.trim();
+        const tag = document.getElementById('ann-tag').value;
+        const date = document.getElementById('ann-date').value.trim();
+        const location = document.getElementById('ann-location').value;
+        const desc = document.getElementById('ann-desc').value.trim();
+
+        if (!title) return alert("Saisissez le titre.");
+
+        appData.annonces.unshift({ title, tag, date, location, desc });
+        saveData();
+        renderAnnonces();
+
+        document.getElementById('ann-title').value = '';
+        document.getElementById('ann-date').value = '';
+        document.getElementById('ann-desc').value = '';
+        alert("Annonce publiée !");
+    }
+
+    function deleteAnnonce(idx) {
+        appData.annonces.splice(idx, 1);
+        saveData();
+        renderAnnonces();
+    }
+
+    function renderCulture() {
+        const container = document.getElementById('culture-list-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        appData.culture.forEach((cul, idx) => {
+            const card = document.createElement('div');
+            card.className = 'media-card';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="media-type">${cul.type}</div>
+                    <button class="delete-btn admin-only" onclick="deleteCulture(${idx})">🗑️ Supprimer</button>
+                </div>
+                <div class="media-title">${cul.title}</div>
+                <div class="media-desc">${cul.desc}</div>
+            `;
+            container.appendChild(card);
+        });
+        applyAdminMode();
+    }
+
+    function addCultureItem() {
+        const type = document.getElementById('cul-type').value;
+        const title = document.getElementById('cul-title').value.trim();
+        const desc = document.getElementById('cul-desc').value.trim();
+
+        if (!title) return alert("Saisissez le titre.");
+
+        appData.culture.unshift({ type, title, desc });
+        saveData();
+        renderCulture();
+
+        document.getElementById('cul-title').value = '';
+        document.getElementById('cul-desc').value = '';
+    }
+
+    function deleteCulture(idx) {
+        appData.culture.splice(idx, 1);
+        saveData();
+        renderCulture();
+    }
+
+    function renderContacts() {
+        const container = document.getElementById('contact-list-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        appData.contacts.forEach((cnt, idx) => {
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.innerHTML = `
+                <div>
+                    <h4 style="font-size:1.05rem;">${cnt.name}</h4>
+                    <p style="font-size:0.85rem; color:#666;">${cnt.role}</p>
+                    ${cnt.phone ? `<p style="font-size:0.88rem; margin-top:4px;"><b>📞 Téléphone :</b> ${cnt.phone}</p>` : ''}
+                    ${cnt.email ? `<p style="font-size:0.88rem;"><b>✉️ E-mail :</b> ${cnt.email}</p>` : ''}
+                </div>
+                <button class="delete-btn admin-only" onclick="deleteContact(${idx})">🗑️ Supprimer</button>
+            `;
+            container.appendChild(card);
+        });
+        applyAdminMode();
+    }
+
+    function addContactPerson() {
+        const name = document.getElementById('cnt-name').value.trim();
+        const role = document.getElementById('cnt-role').value.trim();
+        const phone = document.getElementById('cnt-phone').value.trim();
+        const email = document.getElementById('cnt-email').value.trim();
+
+        if (!name) return alert("Indiquez le nom.");
+
+        appData.contacts.unshift({ name, role, phone, email });
+        saveData();
+        renderContacts();
+
+        document.getElementById('cnt-name').value = '';
+        document.getElementById('cnt-role').value = '';
+        document.getElementById('cnt-phone').value = '';
+        document.getElementById('cnt-email').value = '';
+    }
+
+    function deleteContact(idx) {
+        appData.contacts.splice(idx, 1);
+        saveData();
+        renderContacts();
+    }
+
+    function toggleStep(headerEl) {
+        const body = headerEl.nextElementSibling;
+        if (body) body.classList.toggle('open');
+    }
+
+    window.onload = function() {
+        loadSavedData();
+        renderChurchPhotos();
+        renderCalendarGrid();
+        renderAnnonces();
+        renderCulture();
+        renderContacts();
+        renderWelcomeMessage();
+        applyAdminMode();
+    };
+</script>
+
+</body>
+</html>
